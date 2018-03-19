@@ -107,18 +107,20 @@ int main() {
 
       // Set current gains
       case 'g': {
+        int kp = 0, ki = 0;
         NU32_ReadUART3(buffer, BUF_SIZE);
-        sscanf(buffer, "%d", &Kp);
+        sscanf(buffer, "%d", &kp);
         NU32_ReadUART3(buffer, BUF_SIZE);
-        sscanf(buffer, "%d", &Ki);
+        sscanf(buffer, "%d", &ki);
+        set_gains(kp, ki);
         break;
       }
 
       // Get current gains
       case 'h': {
-        sprintf(buffer, "%d", get_gains('p'));
+        sprintf(buffer, "%d\r\n", get_gains('p'));
         NU32_WriteUART3(buffer);
-        sprintf(buffer, "%d", get_gains('i'));
+        sprintf(buffer, "%d\r\n", get_gains('i'));
         NU32_WriteUART3(buffer);
         break;
       }

@@ -2,6 +2,8 @@
 #include <xc.h>
 #include <stdlib.h>
 
+static volatile int Kp = 0, Ki = 0, Eint = 0;
+
 void current_control_init() {
   // Configure pin RB1 (I/O pin D11)
   TRISDbits.TRISD11 = 0;       // pin RD11 (D11) configured as digital output

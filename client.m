@@ -84,16 +84,16 @@ while ~has_quit
             end
             
         case 'g'
-            kp = input('Enter Kp: ');
-            fprintf(mySerial, '%d\n', kp);
-            ki = input('Enter Ki: ');
-            fprintf(mySerial, '%d\n', ki);
+            kpset = input('Enter Kp: ');
+            fprintf(mySerial, '%d\n', kpset);
+            kiset = input('Enter Ki: ');
+            fprintf(mySerial, '%d\n', kiset);
             fprintf('Gains set!\n\n');
         
         case 'h'
-            kp = fscanf(mySerial, '%d');
-            ki = fscanf(mySerial, '%d');
-            fprintf('Kp: %d    Ki: %d', kp, ki);
+            kpget = fscanf(mySerial, '%d');
+            kiget = fscanf(mySerial, '%d');
+            fprintf('Kp: %d    Ki: %d\n\n', kpget, kiget);
             
         case 'p'
             fprintf('Motor unpowered.\n');
