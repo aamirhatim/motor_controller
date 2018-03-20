@@ -12,8 +12,8 @@
 #define BUF_SIZE 200
 #define PLOTPTS 100
 
-int i, spd, deg;
-float kp, ki, kd;
+int i, spd, deg, traj_size, ref_point;
+float kp, ki, kd, cubic_float = 0;
 
 static volatile int ADCarray[PLOTPTS];
 static volatile int REFarray[PLOTPTS];
@@ -67,13 +67,21 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CurrentControl(void) {
       OC1RS = (unsigned int) abs(control/100)*PR3;
       break;
     }
+
+    case TRACK: {
+      ival = ADC_mA();
+      control = pi_control(iref, ival);
+      set_dir((int) control);
+      OC1RS = (unsigned int) abs(control/100)*PR3;
+      break;
+    }
   }
 
   IFS0bits.T2IF = 0;          // reset interrupt flag
 }
 
 void __ISR(_TIMER_4_VECTOR, IPL6SOFT) PositionControl(void) {
-  static int pcontrol, enc;
+  static int pcontrol, enc, track_count = 0;
 
   switch (get_mode()) {
     case HOLD: {
@@ -85,6 +93,20 @@ void __ISR(_TIMER_4_VECTOR, IPL6SOFT) PositionControl(void) {
       iref = pcontrol*IMAX/100;
       break;
     }
+
+    case TRACK: {
+      if (track_count >= traj_size) {
+        track_count = 0;
+        set_deg_ticks(traj_array[traj_size-1]);
+        set_mode(HOLD);
+      }
+
+      enc = encoder_counts();
+      pcontrol = pid_control(traj_array[track_count], enc);
+      iref = pcontrol*IMAX/100;
+      track_count++;
+      break;
+    }
   }
 
   IFS0bits.T4IF = 0;          // reset interrupt flag
@@ -94,7 +116,7 @@ int main() {
   char buffer[BUF_SIZE];
   NU32_Startup();
   encoder_init();       // initialize SPI3
-  set_mode(IDLE);          // enter IDLE mode on sartup
+  set_mode(IDLE);       // enter IDLE mode on sartup
   ADC_init();           // Enable ADC pin 1 (AN1)
   NU32_LED1 = 1;
   NU32_LED2 = 1;
@@ -103,6 +125,15 @@ int main() {
   current_control_init();
   pos_control_init();
   __builtin_enable_interrupts();
+
+  Kp[0] = 12.0;
+  Ki[0] = 0.05;
+  Kd[0] = 0.0;
+
+  Kp[1] = 0.1;
+  Ki[1] = 0.001;
+  Kd[1] = 6.5;
+
 
   while(1) {
     NU32_ReadUART3(buffer, BUF_SIZE);
@@ -222,6 +253,55 @@ int main() {
         itest_reset();
         hold_reset();
         set_mode(HOLD);
+        break;
+      }
+
+      // Load step trajectory
+      case 'm': {
+        // clear anything that is traj_array[]
+        traj_reset();
+        traj_size = 0;
+
+        // Read size of new trajectory array
+        NU32_ReadUART3(buffer, BUF_SIZE);
+        sscanf(buffer, "%d", &traj_size);
+
+        if (traj_size < 2000) {
+          // Add reference angles to traj_array
+          for (i = 0; i < traj_size; i++) {
+            NU32_ReadUART3(buffer, BUF_SIZE);
+            sscanf(buffer, "%d", &traj_array[i]);
+          }
+        }
+
+        break;
+      }
+
+      // Load cubic trajectory
+      case 'n': {
+        traj_reset();
+        traj_size = 0;
+
+        // Read size of new trajectory array
+        NU32_ReadUART3(buffer, BUF_SIZE);
+        sscanf(buffer, "%d", &traj_size);
+
+        if (traj_size < 2000) {
+          // Add reference angles to traj_array
+          for (i = 0; i < traj_size; i++) {
+            NU32_ReadUART3(buffer, BUF_SIZE);
+            sscanf(buffer, "%f", &cubic_float);
+            traj_array[i] = (int) cubic_float;
+          }
+        }
+        break;
+      }
+
+      // Execute trajectory
+      case 'o': {
+        itest_reset();
+        hold_reset();
+        set_mode(TRACK);
         break;
       }
 

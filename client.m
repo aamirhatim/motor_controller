@@ -39,7 +39,7 @@ while ~has_quit
     fprintf('     a: Read Current Sensor (ADC counts)    j: Get Position Gains\n');
     fprintf('     b: Read Current Sensor (mA)            k: Test Current Control\n');
     fprintf('     c: Read Encoder (counts)               l: Go to Angle (deg)\n');
-    fprintf('     d: Read Encoder (deg)                  m: \n');
+    fprintf('     d: Read Encoder (deg)                  m: Load Step Trajectory\n');
     fprintf('     e: Reset Encoder                       n: \n');
     fprintf('     f: Set PWM (-100 to 100)               o: \n');
     fprintf('     g: Set Current Gains                   p: Unpower Motor\n');
@@ -129,6 +129,30 @@ while ~has_quit
             a = input('Enter desired angle (deg): ');
             fprintf(mySerial, '%d\n', a);
             fprintf('Moving to angle: %d\n\n', a);
+            
+        case 'm'
+            trajectory = input('Enter your trajectory:\n');
+            ref = genRef(trajectory, 'step');
+            fprintf(mySerial, '%d\n', length(ref));
+            fprintf('Sending trajectory...\n');
+            for i = 1:length(ref)
+                ref(i) = (ref(i)*1792/360) + 32768; %convert to ticks value
+                fprintf(mySerial, '%d\n', ref(i));
+            end
+            
+            fprintf('Trajectory sent!\n\n');
+           
+        case 'n'
+            trajectory = input('Enter your trajectory:\n');
+            ref = genRef(trajectory, 'cubic');
+            fprintf(mySerial, '%d\n', length(ref));
+            fprintf('Sending trajectory...\n');
+            for i = 1:length(ref)
+                ref(i) = (ref(i)*1792/360) + 32768; %convert to ticks value
+                fprintf(mySerial, '%f\n', ref(i));
+            end
+            
+            fprintf('Trajectory sent!\n\n');
             
         case 'p'
             fprintf('Motor unpowered.\n');

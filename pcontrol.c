@@ -33,6 +33,10 @@ void set_deg(int d) {
   refdegree = MIDDLE + to_ticks(d);
 }
 
+void set_deg_ticks(int d) {
+  refdegree = d;
+}
+
 int get_deg() {
   return refdegree;
 }
@@ -42,8 +46,8 @@ int to_ticks(int d) {
 }
 
 int pid_control(int pref, int pval) {
-  int err, u;
-  float derr;
+  int err = 0, u = 0;
+  float derr = 0;
   err = pref - pval;
   pEint += err*.005;
   derr = err-prev;
@@ -58,4 +62,11 @@ int pid_control(int pref, int pval) {
   }
 
   return u;
+}
+
+void traj_reset() {
+  int i;
+  for (i = 0; i < 2000; i++) {
+    traj_array[i] = 0;
+  }
 }

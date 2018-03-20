@@ -57,8 +57,8 @@ void itest_reset() {
 }
 
 float pi_control(int refval, float realval) {
-  float err;
-  float u;
+  float err = 0;
+  float u = 0;
 
   err = refval - realval;
   iEint += err;
