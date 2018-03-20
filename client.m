@@ -58,8 +58,8 @@ while ~has_quit
             fprintf('Current Sensor (in counts): %d\n\n', adc_cnt);
             
         case 'b'
-            adc_ma = fscanf(mySerial, '%d');
-            fprintf('Current Sensor (in mA): %d\n\n', adc_ma);
+            adc_ma = fscanf(mySerial, '%f');
+            fprintf('Current Sensor (in mA): %f\n\n', round(adc_ma,2));
             
         case 'c'
             cnt = fscanf(mySerial,'%d');   % get the incremented number back
@@ -85,15 +85,30 @@ while ~has_quit
             
         case 'g'
             kpset = input('Enter Kp: ');
-            fprintf(mySerial, '%d\n', kpset);
+            fprintf(mySerial, '%f\n', kpset);
             kiset = input('Enter Ki: ');
-            fprintf(mySerial, '%d\n', kiset);
+            fprintf(mySerial, '%f\n', kiset);
             fprintf('Gains set!\n\n');
         
         case 'h'
-            kpget = fscanf(mySerial, '%d');
-            kiget = fscanf(mySerial, '%d');
-            fprintf('Kp: %d    Ki: %d\n\n', kpget, kiget);
+            kpget = fscanf(mySerial, '%f');
+            kiget = fscanf(mySerial, '%f');
+            fprintf('Kp: %f    Ki: %f\n\n', kpget, kiget);
+            
+        case 'k'
+            %% Reading Data
+            fprintf("Waiting for samples...\n");
+
+            data = zeros(100,2);
+            
+            for i = 1:100
+                data(i,:) = fscanf(mySerial, '%d %d');
+                times(i) = (i-1)*.2;
+            end
+            stairs(times, data(:,1:2));
+            
+            score = mean(abs(data(:,1)-data(:,2)));
+            title(sprintf('\nAverage Error: %5.1f mA\n\n', score));
             
         case 'p'
             fprintf('Motor unpowered.\n');

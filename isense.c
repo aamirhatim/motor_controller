@@ -30,7 +30,7 @@ unsigned int ADC_Sample_Convert() {
   return ADC1BUF0;                              // return result
 }
 
-unsigned int ADC_mA() {
+float ADC_mA() {
   unsigned int adcval = ADC_Sample_Convert();
   return 1.97*adcval - 1010.87;
 }

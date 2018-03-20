@@ -9,11 +9,17 @@
 #include <stdio.h>
 
 #define BUF_SIZE 200
+#define PLOTPTS 100
 
-static int speed;
-static int pwm;
+int i;
+
+static volatile int ADCarray[PLOTPTS];
+static volatile int REFarray[PLOTPTS];
 
 void __ISR(_TIMER_2_VECTOR, IPL6SOFT) CurrentControl(void) {
+  char msg[100];
+  static int control;
+
   switch (get_mode()) {
     case IDLE: {
       OC1RS = 0;
@@ -21,18 +27,36 @@ void __ISR(_TIMER_2_VECTOR, IPL6SOFT) CurrentControl(void) {
     }
 
     case PWM: {
-      if (speed < 0) {
-        LATDSET = 0x800;
-      }
-      else {
-        LATDCLR = 0x800;
-      }
-
-      OC1RS = pwm;
+      OC1RS = get_pwm();
       break;
     }
 
     case ITEST: {
+      static volatile int icount;
+
+      // Read current value from ADC pin
+      ival = ADC_mA();
+      control = pi_control(itestval, ival);
+
+      set_dir((int) control);
+      ADCarray[icount] = (int) ival;
+      REFarray[icount] = itestval;
+      OC1RS = (unsigned int) abs(control/100)*PR3;
+
+      if (icount == 25 || icount == 50 || icount == 75) {
+        itestval = itestval*(-1);
+        icount++;
+      }
+      else if (icount >= 99) {
+        set_mode(IDLE);
+        store_data = 0;
+        icount = 0;
+        break;
+      }
+      else {
+        icount++;
+      }
+
       break;
     }
   }
@@ -67,7 +91,7 @@ int main() {
 
       // Read current sensor (mA)
       case 'b': {
-        sprintf(buffer, "%d\r\n", ADC_mA());
+        sprintf(buffer, "%f\r\n", ADC_mA());
         NU32_WriteUART3(buffer);
         break;
       }
@@ -98,30 +122,50 @@ int main() {
 
       // Set PWM
       case 'f': {
+        int spd;
         NU32_ReadUART3(buffer, BUF_SIZE);
-        sscanf(buffer, "%d", &speed);
-        pwm = get_pwm(speed);
+        sscanf(buffer, "%d", &spd);
+        set_dir(spd);
+        set_pwm(spd);
         set_mode(PWM);
         break;
       }
 
       // Set current gains
       case 'g': {
-        int kp = 0, ki = 0;
+        float kp, ki;
         NU32_ReadUART3(buffer, BUF_SIZE);
-        sscanf(buffer, "%d", &kp);
+        sscanf(buffer, "%f", &kp);
         NU32_ReadUART3(buffer, BUF_SIZE);
-        sscanf(buffer, "%d", &ki);
+        sscanf(buffer, "%f", &ki);
         set_gains(kp, ki);
         break;
       }
 
       // Get current gains
       case 'h': {
-        sprintf(buffer, "%d\r\n", get_gains('p'));
+        sprintf(buffer, "%f\r\n", get_gains('p'));
         NU32_WriteUART3(buffer);
-        sprintf(buffer, "%d\r\n", get_gains('i'));
+        sprintf(buffer, "%f\r\n", get_gains('i'));
         NU32_WriteUART3(buffer);
+        break;
+      }
+
+      // Test current gains
+      case 'k': {
+        itest_reset();
+        // store_data = 1;
+        // Eint = 0;
+        // itestval = 200;
+        set_mode(ITEST);
+        while (store_data) {
+          ;
+        }
+
+        for (i = 0; i < PLOTPTS; i++) {
+          sprintf(buffer, "%d %d\r\n", REFarray[i], ADCarray[i]);
+          NU32_WriteUART3(buffer);
+        }
         break;
       }
 

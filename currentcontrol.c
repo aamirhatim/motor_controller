@@ -1,8 +1,17 @@
 #include "currentcontrol.h"
+#include "NU32.h"
+#include "utilities.h"
 #include <xc.h>
 #include <stdlib.h>
 
-static volatile int Kp = 0, Ki = 0, Eint = 0;
+volatile float Kp = 0, Ki = 0;
+
+void itest_reset() {
+  store_data = 1;
+  Eint = 0;
+  itestval = 200;
+  ival = 0;
+}
 
 void current_control_init() {
   // Configure pin RB1 (I/O pin D11)
@@ -32,21 +41,69 @@ void current_control_init() {
   OC1CONbits.ON = 1;          // turn on OC1
 }
 
-int get_pwm(int speed) {
-  return (PR3+1)*abs(speed)/100;
+// void set_speed(int s) {
+//   s = speed;
+// }
+
+// int get_speed() {
+//   return speed;
+// }
+
+// int to_pwm(int s) {
+//   return (PR3)*abs(s)/100;
+// }
+
+void set_pwm(int p) {
+  pwm = (PR3)*abs(p)/100;
 }
 
-void set_gains(int kp, int ki) {
+int get_pwm() {
+  // return (PR3+1)*abs(speed)/100;
+  return pwm;
+}
+
+// int get_dir() {
+//  return direction;
+// }
+
+void set_dir(int s) {
+  if (s < 0) {
+    LATDSET = 0x800;
+  }
+  else if (s > 1) {
+    LATDCLR = 0x800;
+  }
+}
+
+void set_gains(float kp, float ki) {
   Kp = kp;
   Ki = ki;
   return;
 }
 
-int get_gains(char gain_type) {
+float get_gains(char gain_type) {
   if (gain_type == 'p') {
     return Kp;
   }
   else if (gain_type == 'i') {
     return Ki;
   }
+}
+
+float pi_control(int refval, float realval) {
+  float err;
+  float u;
+
+  err = refval - realval;
+  Eint += err;
+
+  u = (Kp*err) + (Ki*Eint);
+
+  if (u > 100.0) {
+    u = 100.0;
+  }
+  else if (u < -100.0) {
+    u = -100.0;
+  }
+  return u;
 }
