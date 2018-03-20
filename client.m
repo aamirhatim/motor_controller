@@ -125,6 +125,11 @@ while ~has_quit
             score = mean(abs(data(:,1)-data(:,2)));
             title(sprintf('\nAverage Error: %5.1f mA\n\n', score));
             
+        case 'l'
+            a = input('Enter desired angle (deg): ');
+            fprintf(mySerial, '%d\n', a);
+            fprintf('Moving to angle: %d\n\n', a);
+            
         case 'p'
             fprintf('Motor unpowered.\n');
             fprintf('Mode set to IDLE\n\n');

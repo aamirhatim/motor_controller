@@ -5,9 +5,6 @@
 #include "encoder.h"
 #include <xc.h>
 
-#define MIDDLE 32768
-#define LINES_PER_REV 1792                // 448 lines on encoder, 4x multiplier
-
 static int encoder_command(int read) {    // send a command to the encoder
   SPI3BUF = read;                         // send command
   while(!SPI3STATbits.SPIRBF) {           // wait for response
