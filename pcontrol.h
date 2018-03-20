@@ -11,6 +11,7 @@ void set_deg(int);
 void set_deg_ticks(int);
 int get_deg();
 int to_ticks(int);
+int to_deg(int);
 int pid_control(int, int);
 void traj_reset();
 

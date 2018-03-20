@@ -45,6 +45,10 @@ int to_ticks(int d) {
   return d*LINES_PER_REV/360;
 }
 
+int to_deg(int t) {
+  return (t-MIDDLE)*360/LINES_PER_REV;
+}
+
 int pid_control(int pref, int pval) {
   int err = 0, u = 0;
   float derr = 0;

@@ -40,8 +40,8 @@ while ~has_quit
     fprintf('     b: Read Current Sensor (mA)            k: Test Current Control\n');
     fprintf('     c: Read Encoder (counts)               l: Go to Angle (deg)\n');
     fprintf('     d: Read Encoder (deg)                  m: Load Step Trajectory\n');
-    fprintf('     e: Reset Encoder                       n: \n');
-    fprintf('     f: Set PWM (-100 to 100)               o: \n');
+    fprintf('     e: Reset Encoder                       n: Load Cubic Trajectory\n');
+    fprintf('     f: Set PWM (-100 to 100)               o: Execute Trajectory\n');
     fprintf('     g: Set Current Gains                   p: Unpower Motor\n');
     fprintf('     h: Get Current Gains                   q: Quit\n');
     fprintf('     i: Set Position Gains                  r: Get Mode\n');
@@ -153,6 +153,24 @@ while ~has_quit
             end
             
             fprintf('Trajectory sent!\n\n');
+            
+        case 'o'
+            %% Reading Data
+            fprintf("Waiting for samples...\n");
+            l = fscanf(mySerial, '%d');
+
+            data = zeros(l,2);
+            
+            for i = 1:l
+                data(i,:) = fscanf(mySerial, '%d %d');
+                times(i) = (i-1)*.005;
+            end
+            stairs(times, data(:,1:2));
+            
+            score = mean(abs(data(:,1)-data(:,2)));
+            title(sprintf('\nAverage Error: %5.1f degrees\n\n', score));
+            xlabel('Time (s)');
+            ylabel('Angle (degrees)');
             
         case 'p'
             fprintf('Motor unpowered.\n');

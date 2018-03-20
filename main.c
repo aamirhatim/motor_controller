@@ -15,6 +15,7 @@
 int i, spd, deg, traj_size, ref_point;
 float kp, ki, kd, cubic_float = 0;
 
+static volatile int RealPos[2000];
 static volatile int ADCarray[PLOTPTS];
 static volatile int REFarray[PLOTPTS];
 void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CurrentControl(void) {
@@ -101,8 +102,9 @@ void __ISR(_TIMER_4_VECTOR, IPL6SOFT) PositionControl(void) {
         set_mode(HOLD);
       }
 
-      enc = encoder_counts();
-      pcontrol = pid_control(traj_array[track_count], enc);
+      RealPos[track_count] = (int) encoder_counts();
+      // enc = encoder_counts();
+      pcontrol = pid_control(traj_array[track_count], RealPos[track_count]);
       iref = pcontrol*IMAX/100;
       track_count++;
       break;
@@ -302,6 +304,17 @@ int main() {
         itest_reset();
         hold_reset();
         set_mode(TRACK);
+
+        while (get_mode() == TRACK) {
+          ;
+        }
+        sprintf(buffer, "%d\r\n", traj_size);
+        NU32_WriteUART3(buffer);
+
+        for (i = 0; i < traj_size; i++) {
+          sprintf(buffer, "%d %d\r\n", to_deg(traj_array[i]), to_deg(RealPos[i]));
+          NU32_WriteUART3(buffer);
+        }
         break;
       }
 
