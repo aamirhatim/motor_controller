@@ -1,17 +1,8 @@
-#include "currentcontrol.h"
-#include "NU32.h"
+#include "icontrol.h"
+// #include "NU32.h"
 #include "utilities.h"
 #include <xc.h>
 #include <stdlib.h>
-
-// volatile float Kp = 0, Ki = 0;
-
-void itest_reset() {
-  store_data = 1;
-  iEint = 0;
-  itestval = 200;
-  ival = 0;
-}
 
 void current_control_init() {
   // Configure pin RB1 (I/O pin D11)
@@ -24,7 +15,7 @@ void current_control_init() {
   T2CONbits.TCKPS = 0;        // prescaler of 1
   T2CONbits.TGATE = 0;
   T2CONbits.ON = 1;           // turn Timer2 on
-  IPC2bits.T2IP = 6;          // priority
+  IPC2bits.T2IP = 5;          // priority
   IPC2bits.T2IS = 0;          // subpriority 0
   IFS0bits.T2IF = 0;          // set interrupt flag to 0
   IEC0bits.T2IE = 1;          // enable interrupt
@@ -58,20 +49,12 @@ void set_dir(int s) {
   }
 }
 
-// void set_gains(float kp, float ki) {
-//   Kp = kp;
-//   Ki = ki;
-//   return;
-// }
-//
-// float get_gains(char gain_type) {
-//   if (gain_type == 'p') {
-//     return Kp;
-//   }
-//   else if (gain_type == 'i') {
-//     return Ki;
-//   }
-// }
+void itest_reset() {
+  store_data = 1;
+  iEint = 0;
+  itestval = 200;
+  ival = 0;
+}
 
 float pi_control(int refval, float realval) {
   float err;

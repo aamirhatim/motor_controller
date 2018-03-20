@@ -5,7 +5,7 @@
 #include "encoder.h"
 #include "utilities.h"
 #include "isense.h"
-#include "currentcontrol.h"
+#include "icontrol.h"
 #include <stdio.h>
 
 #define BUF_SIZE 200
@@ -16,9 +16,7 @@ float kp, ki, kd;
 
 static volatile int ADCarray[PLOTPTS];
 static volatile int REFarray[PLOTPTS];
-
-void __ISR(_TIMER_2_VECTOR, IPL6SOFT) CurrentControl(void) {
-  char msg[100];
+void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CurrentControl(void) {
   static int control;
 
   switch (get_mode()) {
@@ -64,6 +62,12 @@ void __ISR(_TIMER_2_VECTOR, IPL6SOFT) CurrentControl(void) {
   IFS0bits.T2IF = 0;          // reset interrupt flag
 }
 
+void __ISR(_TIMER_4_VECTOR, IPL6SOFT) PositionControl(void) {
+  LATDINV = 0x400;
+
+  IFS0bits.T4IF = 0;          // reset interrupt flag
+}
+
 int main() {
   char buffer[BUF_SIZE];
   NU32_Startup();
@@ -75,6 +79,7 @@ int main() {
 
   __builtin_disable_interrupts();
   current_control_init();
+  pos_control_init();
   __builtin_enable_interrupts();
 
   while(1) {

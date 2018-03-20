@@ -1,5 +1,5 @@
-#ifndef CURRENTCONTROL__H__
-#define CURRENTCONTROL__H__
+#ifndef ICONTROL__H__
+#define ICONTROL__H__
 
 static volatile float iEint = 0;
 volatile float ival;
@@ -10,14 +10,9 @@ int speed;
 
 
 void current_control_init();
-void set_speed(int);
-int get_speed();
 int get_pwm();
 void set_pwm(int);
-int get_dir();
 void set_dir();
-// float get_gains(char);
-// void set_gains(float, float);
 float pi_control(int, float);
 void itest_reset();
 
