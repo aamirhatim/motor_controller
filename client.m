@@ -36,15 +36,15 @@ has_quit = false;
 while ~has_quit
     fprintf('PIC32 MOTOR DRIVER INTERFACE\n\n');
     % display the menu options; this list will grow
-    fprintf('     a: Read Current Sensor (ADC counts)    j: \n');
+    fprintf('     a: Read Current Sensor (ADC counts)    j: Get Position Gains\n');
     fprintf('     b: Read Current Sensor (mA)            k: Test Current Control\n');
-    fprintf('     c: Read Encoder (counts)               l: \n');
+    fprintf('     c: Read Encoder (counts)               l: Go to Angle (deg)\n');
     fprintf('     d: Read Encoder (deg)                  m: \n');
     fprintf('     e: Reset Encoder                       n: \n');
     fprintf('     f: Set PWM (-100 to 100)               o: \n');
     fprintf('     g: Set Current Gains                   p: Unpower Motor\n');
     fprintf('     h: Get Current Gains                   q: Quit\n');
-    fprintf('     i:                                     r: Get Mode\n');
+    fprintf('     i: Set Position Gains                  r: Get Mode\n');
     % read the user's choice
     selection = input('\nENTER COMMAND: ', 's');
      
@@ -88,12 +88,27 @@ while ~has_quit
             fprintf(mySerial, '%f\n', kpset);
             kiset = input('Enter Ki: ');
             fprintf(mySerial, '%f\n', kiset);
-            fprintf('Gains set!\n\n');
+            fprintf('Current Gains set!\n\n');
         
         case 'h'
             kpget = fscanf(mySerial, '%f');
             kiget = fscanf(mySerial, '%f');
             fprintf('Kp: %f    Ki: %f\n\n', kpget, kiget);
+            
+        case 'i'
+            kpset = input('Enter Kp: ');
+            fprintf(mySerial, '%f\n', kpset);
+            kiset = input('Enter Ki: ');
+            fprintf(mySerial, '%f\n', kiset);
+            kdset = input('Enter Kd: ');
+            fprintf(mySerial, '%f\n', kdset);
+            fprintf('Position Gains set!\n\n');
+            
+        case 'j'
+            kpget = fscanf(mySerial, '%f');
+            kiget = fscanf(mySerial, '%f');
+            kdget = fscanf(mySerial, '%f');
+            fprintf('Kp: %f    Ki: %f    Kd: %f\n\n', kpget, kiget, kdget);
             
         case 'k'
             %% Reading Data

@@ -12,6 +12,7 @@
 #define PLOTPTS 100
 
 int i;
+float kp, ki, kd;
 
 static volatile int ADCarray[PLOTPTS];
 static volatile int REFarray[PLOTPTS];
@@ -51,7 +52,6 @@ void __ISR(_TIMER_2_VECTOR, IPL6SOFT) CurrentControl(void) {
         set_mode(IDLE);
         store_data = 0;
         icount = 0;
-        break;
       }
       else {
         icount++;
@@ -133,20 +133,42 @@ int main() {
 
       // Set current gains
       case 'g': {
-        float kp, ki;
         NU32_ReadUART3(buffer, BUF_SIZE);
         sscanf(buffer, "%f", &kp);
         NU32_ReadUART3(buffer, BUF_SIZE);
         sscanf(buffer, "%f", &ki);
-        set_gains(kp, ki);
+        set_gains(kp, ki, 0, 0);
         break;
       }
 
       // Get current gains
       case 'h': {
-        sprintf(buffer, "%f\r\n", get_gains('p'));
+        sprintf(buffer, "%f\r\n", get_gains('p', 0));
         NU32_WriteUART3(buffer);
-        sprintf(buffer, "%f\r\n", get_gains('i'));
+        sprintf(buffer, "%f\r\n", get_gains('i', 0));
+        NU32_WriteUART3(buffer);
+        break;
+      }
+
+      // Set position gains
+      case 'i': {
+        NU32_ReadUART3(buffer, BUF_SIZE);
+        sscanf(buffer, "%f", &kp);
+        NU32_ReadUART3(buffer, BUF_SIZE);
+        sscanf(buffer, "%f", &ki);
+        NU32_ReadUART3(buffer, BUF_SIZE);
+        sscanf(buffer, "%f", &kd);
+        set_gains(kp, ki, kd, 1);
+        break;
+      }
+
+      // Get position gains
+      case 'j': {
+        sprintf(buffer, "%f\r\n", get_gains('p', 1));
+        NU32_WriteUART3(buffer);
+        sprintf(buffer, "%f\r\n", get_gains('i', 1));
+        NU32_WriteUART3(buffer);
+        sprintf(buffer, "%f\r\n", get_gains('d', 1));
         NU32_WriteUART3(buffer);
         break;
       }
@@ -154,9 +176,6 @@ int main() {
       // Test current gains
       case 'k': {
         itest_reset();
-        // store_data = 1;
-        // Eint = 0;
-        // itestval = 200;
         set_mode(ITEST);
         while (store_data) {
           ;

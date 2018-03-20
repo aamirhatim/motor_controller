@@ -4,11 +4,11 @@
 #include <xc.h>
 #include <stdlib.h>
 
-volatile float Kp = 0, Ki = 0;
+// volatile float Kp = 0, Ki = 0;
 
 void itest_reset() {
   store_data = 1;
-  Eint = 0;
+  iEint = 0;
   itestval = 200;
   ival = 0;
 }
@@ -41,30 +41,13 @@ void current_control_init() {
   OC1CONbits.ON = 1;          // turn on OC1
 }
 
-// void set_speed(int s) {
-//   s = speed;
-// }
-
-// int get_speed() {
-//   return speed;
-// }
-
-// int to_pwm(int s) {
-//   return (PR3)*abs(s)/100;
-// }
-
 void set_pwm(int p) {
   pwm = (PR3)*abs(p)/100;
 }
 
 int get_pwm() {
-  // return (PR3+1)*abs(speed)/100;
   return pwm;
 }
-
-// int get_dir() {
-//  return direction;
-// }
 
 void set_dir(int s) {
   if (s < 0) {
@@ -75,29 +58,29 @@ void set_dir(int s) {
   }
 }
 
-void set_gains(float kp, float ki) {
-  Kp = kp;
-  Ki = ki;
-  return;
-}
-
-float get_gains(char gain_type) {
-  if (gain_type == 'p') {
-    return Kp;
-  }
-  else if (gain_type == 'i') {
-    return Ki;
-  }
-}
+// void set_gains(float kp, float ki) {
+//   Kp = kp;
+//   Ki = ki;
+//   return;
+// }
+//
+// float get_gains(char gain_type) {
+//   if (gain_type == 'p') {
+//     return Kp;
+//   }
+//   else if (gain_type == 'i') {
+//     return Ki;
+//   }
+// }
 
 float pi_control(int refval, float realval) {
   float err;
   float u;
 
   err = refval - realval;
-  Eint += err;
+  iEint += err;
 
-  u = (Kp*err) + (Ki*Eint);
+  u = (Kp[0]*err) + (Ki[0]*iEint);
 
   if (u > 100.0) {
     u = 100.0;
