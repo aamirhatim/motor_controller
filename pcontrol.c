@@ -3,7 +3,8 @@
 #include "utilities.h"
 #include <xc.h>
 
-int refdegree, prev = 0;
+int refdegree;
+volatile int pEint = 0, prev = 0;
 
 void pos_control_init() {
   // Use pin D10 as a digital ouput pin
@@ -44,7 +45,7 @@ int pid_control(int pref, int pval) {
   int err, u;
   float derr;
   err = pref - pval;
-  pEint += err;
+  pEint += err*.005;
   derr = err-prev;
   prev = err;
 

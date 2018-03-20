@@ -11,12 +11,9 @@
 
 #define BUF_SIZE 200
 #define PLOTPTS 100
-char msg[20];
 
 int i, spd, deg;
 float kp, ki, kd;
-volatile int iref = 0;
-volatile int enc, pcontrol;
 
 static volatile int ADCarray[PLOTPTS];
 static volatile int REFarray[PLOTPTS];
@@ -68,8 +65,6 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CurrentControl(void) {
       control = pi_control(iref, ival);
       set_dir((int) control);
       OC1RS = (unsigned int) abs(control/100)*PR3;
-      // sprintf(msg, "%d\r\n", control);
-      // NU32_WriteUART3(msg);
       break;
     }
   }
@@ -78,19 +73,16 @@ void __ISR(_TIMER_2_VECTOR, IPL5SOFT) CurrentControl(void) {
 }
 
 void __ISR(_TIMER_4_VECTOR, IPL6SOFT) PositionControl(void) {
-  // LATDINV = 0x400;
+  static int pcontrol, enc;
 
   switch (get_mode()) {
     case HOLD: {
-      // read encoder and compare to desired position
+      // read encoder position
       enc = encoder_counts();
-      // delta = to_counts(get_deg()) - enc;
 
       // calculate reference current
       pcontrol = pid_control(get_deg(), enc);
       iref = pcontrol*IMAX/100;
-      // sprintf(msg, "%d\r\n", iref);
-      // NU32_WriteUART3(msg);
       break;
     }
   }
@@ -227,7 +219,7 @@ int main() {
         NU32_ReadUART3(buffer, BUF_SIZE);
         sscanf(buffer, "%d", &deg);
         set_deg(deg);
-        // itest_reset();
+        itest_reset();
         hold_reset();
         set_mode(HOLD);
         break;
