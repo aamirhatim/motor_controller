@@ -103,7 +103,6 @@ void __ISR(_TIMER_4_VECTOR, IPL6SOFT) PositionControl(void) {
       }
 
       RealPos[track_count] = (int) encoder_counts();
-      // enc = encoder_counts();
       pcontrol = pid_control(traj_array[track_count], RealPos[track_count]);
       iref = pcontrol*IMAX/100;
       track_count++;
